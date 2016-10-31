@@ -1,0 +1,31 @@
+{
+  "name": "web-service-api-online-trivia-quiz",
+  "version": "1.0.0",
+  "description": "CSUF front-end web engineering assignment 4",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game.git"
+  },
+  "keywords": [
+    "trivia",
+    "quiz",
+    "api"
+  ],
+  "author": "Rodrigo Figueroa",
+  "license": "ISC",
+  "dependencies":{
+      "express": "^4.13.4",
+      "body-parser": "^1.15.0",
+      "MongoDB":"^3.2.1",
+      "Redis": "^3.2.4"
+        }
+  }
+  "bugs": {
+    "url": "https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game/issues"
+  },
+  "homepage": "https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game#readme"
+}
