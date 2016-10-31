@@ -3,11 +3,11 @@ CPSC 473 assignment 4
 
 ## Tools:
 
-- [Node.js]
-- [Express.js]
-- [Body-parser]
-- [MongoDB]
-- [Redis]
+- Node.js
+- Express.js
+- Body-parser
+- MongoDB
+- Redis
 
 ## Installation:
  1.- Type in Terminal: npm install  to install all of the dependencies
@@ -37,8 +37,10 @@ Go to browser and type localhost:3000
 ###response:
 /question
 ![alt tag](./screenshots/question.png) 
+
 /answer
 ![alt tag](./screenshots/answer.png) 
+
 /score
 ![alt tag](./screenshots/score.png) 
 
