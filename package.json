@@ -1,31 +1,24 @@
 {
-  "name": "web-service-api-online-trivia-quiz",
+  "name": "Assignment 5",
   "version": "1.0.0",
-  "description": "CSUF front-end web engineering assignment 4",
+  "description": "Assignment 5",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game.git"
-  },
-  "keywords": [
-    "trivia",
-    "quiz",
-    "api"
-  ],
-  "author": "Rodrigo Figueroa",
+	"repository": {
+        "type": "git",
+        "url": "git+https://github.com/trangnguyen88/assignment-5"
+    },
+    "author": "",
   "license": "ISC",
-  "dependencies":{
-      "express": "^4.13.4",
-      "body-parser": "^1.15.0",
-      "MongoDB":"^3.2.1",
-      "Redis": "^3.2.4"
-        }
-  }
-  "bugs": {
-    "url": "https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game/issues"
-  },
-  "homepage": "https://github.com/RodrigoFigueroaM/Web-Service-API-online-trivia-game#readme"
+"dependencies": {
+        "bluebird": "^3.3.5",
+        "body-parser": "^1.15.0",
+        "express": "^4.13.4",
+        "mongoose": "^4.4.14",
+	"redis": "^0.12.1",
+	"request": "^2.75.0",
+	"socket.io": "latest"
 }

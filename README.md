@@ -1,5 +1,5 @@
-# Web-Service-API-online-trivia-game
-CPSC 473 assignment 4
+# TriviaGameMultiPlayerSocket
+CPSC 473 assignment 5
 
 ## Tools:
 
@@ -8,7 +8,7 @@ CPSC 473 assignment 4
 - Body-parser
 - MongoDB
 - Redis
-
+- socket.io
 ## Installation:
  1.- Type in Terminal: npm install  to install all of the dependencies
 ```
@@ -30,25 +30,9 @@ $ $HOME/mongodb/bin/mongod --dbpath=$HOME/mongodb/data
 $ node server.js
 ````
 
-4.- Access
+5.- Access
 Go to browser and type localhost:3000
 
-## Sample API 
-###response:
-/question
-![alt tag](./screenshots/question.png) 
-
-/answer
-![alt tag](./screenshots/answer.png) 
-
-/score
-![alt tag](./screenshots/score.png) 
-
-## Web app 
-###Play Trivia
-![alt tag](./screenshots/play.png) 
-###Add questions to trivia
-![alt tag](./screenshots/contribute.png) 
 
 
 

@@ -9,19 +9,37 @@ var express = require('express'),
     test = require('assert');
     app = express(),
     url='mongodb://localhost/questionnaire';
+    server= require('http').createServer(app);
+    io=require('socket.io').listen(server);
 
 //global variable
 var questionnaire;
-var answerId=0; //used so taht each question get a different Id
+var questionId=0; //used so taht each question get a different Id
 var random;     //randomizes the question for user side
 var sendThisQuestion={}; //question to send
 var checkAnswer={}; // check client Answer will contain answer and id
 var score={};   // current score for player
 
-http.createServer(app).listen(3000);
+server.listen(3000);
 app.use(body.urlencoded({extended:false}));
 app.use(body.json());
 app.use(express.static(__dirname+'/client'));
+
+
+/*****************************************************
+  start database
+******************************************************/
+mongo.connect(url, function(err,db)
+ {
+       'use strict';
+
+       questionnaire=db.collection('questionnaire');
+       cleanColection(questionnaire);
+       loadSomeQuestions(questionnaire);
+       redis.flushall();
+       console.log("Flushing all user scores of previous Trivia Session");
+ });
+
 
 /******************************************************
      takes db and empties it outuppon complition displays
@@ -31,7 +49,7 @@ function cleanColection(questionnaire)
 {
   	'use strict';
     questionnaire.remove({},function (err, db)
- {
+    {
      if(err)
      {
          console.log('Couldnt remove collection');
@@ -49,28 +67,37 @@ function cleanColection(questionnaire)
 ******************************************************/
 function loadSomeQuestions(questionnaire)
 {
-  	'use strict';
-    questionnaire.insert({question:'Who was the first computer programmer?', answer:'Ada Lovelace', answerId:++answerId});
-    questionnaire.insert({question:'Who launched GNU?', answer:'Richard Stallman', answerId:++answerId});
-    questionnaire.insert({question:'Who founded apple?', answer:'Steve Jobs', answerId:++answerId});
-    questionnaire.insert({question:'Who founded MicroSoft?', answer:'Bill Gates', answerId:++answerId});
+    'use strict';
+    questionnaire.insert({question:'What is the Aloha State?', answer:'Hawaii', questionId:++questionId});
+    questionnaire.insert({question:'What is the world longest river?', answer:'Amazon', questionId:++questionId});
+    questionnaire.insert({question:'Who is the president-elect of USA this year? ', answer:'Donald Trump', questionId:++questionId});
+    questionnaire.insert({question:'What is the largest state in the USA?', answer:'Alaska', questionId:++questionId});
+    questionnaire.insert({question:'Which state is the Golden State?', answer:'California', questionId:++questionId});
+    questionnaire.insert({question:'Which state is called the volunteer State?', answer:'Tennessee', questionId:++questionId});
 }
 
-/*****************************************************
-  start database
-******************************************************/
-mongo.connect(url, function(err,db)
- {
-   		'use strict';
 
-       questionnaire=db.collection('questionnaire');
-       cleanColection(questionnaire);
-       loadSomeQuestions(questionnaire);
+app.post('/login',function(req,res){
+   console.log("User :" + req.body.user + " joined the game");
+   'use strict';
+   
+   
+   redis.exists(req.body.user,function(err,value)
+            		 {
+                            console.log(value + " user exist key");
+  			    if( value == 0){ //Only insert if a new user
+     				redis.set(req.body.user,"0,0");
+     				console.log("Adding initial score of 0,0 for user :" + req.body.user);
+                                publishScores();
+   			    }
+   			    else{
+     				console.log("Returning user :" + req.body.user);
+                                publishScores();
+   			    }
+            		 });
+   
+});
 
-       redis.set('right', 0);
-       redis.set('wrong',0);
-
- });
 
  /*****************************************************
     home route
@@ -89,8 +116,9 @@ app.get('/',function(req,res)
 ******************************************************/
 app.post('/answer',function(req,res)
     {
+        console.log("User answering : " + req.body.user);
       	'use strict';
-        questionnaire.findOne({answerId:parseInt(req.body.answerId)},function (err, ans)
+        questionnaire.findOne({questionId:parseInt(req.body.questionId)},function (err, ans)
             {
                 if(err)
                 {
@@ -98,16 +126,30 @@ app.post('/answer',function(req,res)
                 }
                  else
                  {
-                     if(req.body.answer===ans.answer)
+                     if(req.body.answer.toUpperCase()===ans.answer.toUpperCase())
                      {
                          checkAnswer.correct=true;
-                         redis.incr('right');
+                         redis.get(req.body.user,function(err,value)
+            		 {
+  			    var values = value.split(",");
+			    redis.set(req.body.user, (parseInt(values[0]) + 1) + "," + values[1]);
+                            console.log("Sending score changed event");
+			    publishScores();
+            		 });
+                         
                       }
                       else
                       {
                           checkAnswer.correct=false;
-                          redis.incr('wrong');
+                          redis.get(req.body.user,function(err,value)
+            		  {
+                             var values = value.split(",");
+			     redis.set(req.body.user, values[0] + "," + (parseInt(values[1]) + 1));
+                             console.log("Sending score changed event");
+			     publishScores();
+            		  });
                       }
+                      
                    }
               });
     });
@@ -118,7 +160,7 @@ app.post('/answer',function(req,res)
 ******************************************************/
 app.get('/answer',function(req,res)
     {
-      			'use strict';
+      	    'use strict';
             res.json(checkAnswer);
     });
 
@@ -129,18 +171,20 @@ app.get('/answer',function(req,res)
 app.route('/question')
     .get(function(req,res)
             {
+                console.log("received request for next question");
               	'use strict';
-                random = Math.floor((Math.random() * answerId) + 1);
-                questionnaire.findOne({answerId:random},function (err, askQuestion)
+                random = Math.floor((Math.random() * questionId) + 1);
+                questionnaire.findOne({questionId:random},function (err, askQuestion)
                 {
                     if(err)
                     {
                         res.send('error');
+                        console.log("error");
                     }
                     else
                      {
                          sendThisQuestion.question = askQuestion.question;
-                         sendThisQuestion.answerId = askQuestion.answerId;
+                         sendThisQuestion.questionId = askQuestion.questionId;
                          res.send(JSON.stringify(sendThisQuestion));
                      }
                 });
@@ -153,10 +197,10 @@ app.route('/question')
 ******************************************************/
     .post(function(req,res)
             {
-								'use strict';
-           		 	var newQuestion=req.body;
-                		newQuestion.answerId= ++answerId;
-                		questionnaire.insert(newQuestion);
+		'use strict';
+           	var newQuestion=req.body;
+                newQuestion.questionId= ++questionId;
+                questionnaire.insert(newQuestion);
             });
 
 /*****************************************************
@@ -166,17 +210,81 @@ app.route('/question')
 ******************************************************/
 app.get('/score',function(req,res)
     {
-      	'use strict';
-        redis.get('right',function(err,value)
-            {
-                score.right=value;
-            });
-        redis.get('wrong',function(err,value)
-            {
-                score.wrong=value;
-            });
+        var user = req.param('user');
+        'use strict';
+        redis.get(user,function(err,value)
+            		 {
+                            if(value == null){
+                              score.right = 0;
+                              score.wrong = 0;
+                            }
+                            else{
+                              var values = value.split(",");
+			      score.right = values[0];
+                              score.wrong = values[1];
+                            }
+            		 });
         res.json(score);
     });
+
+app.get('/scores',function(req,res)
+    {
+        console.log("Getting all scores");
+        var scores = [];
+    	redis.keys('*', function(err, userlist) {
+       	   var keys = Object.keys(userlist);
+           var i = 0;
+           
+           keys.forEach(function (l) {
+              redis.get(userlist[l], function(e, value) {
+                i++;
+                    if (e) {console.log(e)} else {
+                    //console.log("Found score :" + value);
+                    var values = value.split(",");
+		    var s = {};
+                    s.user = userlist[l];
+                    s.right = values[0];
+                    s.wrong = values[1];
+                    scores.push(s);
+                    //console.log("Pushing score : " + s + " to scores");
+                    if (i == keys.length) {
+                       res.json(scores);
+                    }
+                }
+
+              });
+          });
+    	});
+     
+    });
+
+function publishScores()
+{
+	var scores = [];
+    	redis.keys('*', function(err, userlist) {
+       	   var keys = Object.keys(userlist);
+           var i = 0;
+           
+           keys.forEach(function (l) {
+             	redis.get(userlist[l], function(e, value) {
+                    i++;
+                    if (e) {console.log(e)} else {
+                    var values = value.split(",");
+		    var s = {};
+                    s.user = userlist[l];
+                    s.right = values[0];
+                    s.wrong = values[1];
+                    scores.push(s);
+                    if (i == keys.length) {
+		    io.sockets.emit('score_changed', scores);
+                    }
+                }
+
+              });
+          });
+    	});
+}
+
 
 
 console.log('server listening on  3000');
